@@ -51,21 +51,18 @@ int main()
 	waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL);
 	waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR));
 	waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR));
-
-	MMTIME mmTime;
-	mmTime.wType = TIME_SAMPLES;
 	
 	while (!GetAsyncKeyState(VK_ESCAPE)) {
-		if (waveOutGetPosition(hWaveOut, &mmTime, sizeof(mmTime)) == MMSYSERR_NOERROR)
+		if (waveOutGetPosition(hWaveOut, &MMTime, sizeof(MMTime)) == MMSYSERR_NOERROR)
 		{
-			double totalSeconds = (double)mmTime.u.sample / (double)SAMPLE_RATE;
+			double totalSeconds = (double)MMTime.u.sample / (double)SAMPLE_RATE;
 			int minutes = (int)(totalSeconds / 60.0);
 			int seconds = (int)totalSeconds % 60;
 			int hundredths = (int)(totalSeconds * 100.0) % 100;
 			printf("\r %.1i:%.2i.%.2i", minutes, seconds, hundredths);
 		}
 		
-		if (mmTime.u.sample >= MAX_SAMPLES)
+		if (MMTime.u.sample >= MAX_SAMPLES)
 			break;
 
 		Sleep(10);
