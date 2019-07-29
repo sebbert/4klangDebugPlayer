@@ -11,6 +11,8 @@
 
 #include "4klang/4klang.h"
 
+#define PRERENDER false
+
 static SAMPLE_TYPE lpSoundBuffer[MAX_SAMPLES * 2];
 static HWAVEOUT hWaveOut;
 
@@ -41,12 +43,16 @@ static MMTIME MMTime =
 
 int main()
 {
+#if PRERENDER
+	_4klang_render(lpSoundBuffer);
+#else
 	HANDLE hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)_4klang_render, lpSoundBuffer, 0, 0);
 	if (hThread == 0)
 	{
 		fprintf(stderr, "Failed to create thread\n");
 		return 1;
 	}
+#endif
 
 	waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL);
 	waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR));
