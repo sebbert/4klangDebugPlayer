@@ -41,7 +41,12 @@ static MMTIME MMTime =
 	TIME_SAMPLES, 0
 };
 
+
+#ifndef NDEBUG
 int main()
+#else
+int WINAPI mainCRTStartup()
+#endif
 {
 #if PRERENDER
 	_4klang_render(lpSoundBuffer);
@@ -49,7 +54,9 @@ int main()
 	HANDLE hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)_4klang_render, lpSoundBuffer, 0, 0);
 	if (hThread == 0)
 	{
+#ifdef _DEBUG
 		fprintf(stderr, "Failed to create thread\n");
+#endif
 		return 1;
 	}
 #endif
@@ -57,22 +64,18 @@ int main()
 	waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL);
 	waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR));
 	waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR));
-	
-	while (!GetAsyncKeyState(VK_ESCAPE)) {
-		if (waveOutGetPosition(hWaveOut, &MMTime, sizeof(MMTime)) == MMSYSERR_NOERROR)
-		{
-			double totalSeconds = (double)MMTime.u.sample / (double)SAMPLE_RATE;
-			int minutes = (int)(totalSeconds / 60.0);
-			int seconds = (int)totalSeconds % 60;
-			int hundredths = (int)(totalSeconds * 100.0) % 100;
-			printf("\r %.1i:%.2i.%.2i", minutes, seconds, hundredths);
-		}
-		
-		if (MMTime.u.sample >= MAX_SAMPLES)
-			break;
 
+	do {
+		waveOutGetPosition(hWaveOut, &MMTime, sizeof(MMTime));
+#ifdef _DEBUG
+		double totalSeconds = (double)MMTime.u.sample / (double)SAMPLE_RATE;
+		int minutes = (int)(totalSeconds / 60.0);
+		int seconds = (int)totalSeconds % 60;
+		int hundredths = (int)(totalSeconds * 100.0) % 100;
+		printf("\r %.1i:%.2i.%.2i", minutes, seconds, hundredths);
 		Sleep(10);
-	}
+#endif
+	} while (!GetAsyncKeyState(VK_ESCAPE) && MMTime.u.sample < MAX_SAMPLES);
 
-	printf("\n");
+	return 0;
 }
